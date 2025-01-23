@@ -1,0 +1,13 @@
+﻿id,Layer,Carriers Submitted to,Quoted ,Bound
+1,Primary $10m,AXA XL,Yes,Yes
+1,Primary $10m,AIG,No,No
+1,Primary $10m,Chubb,Yes,No
+1,Primary $10m,Beazley,No,No
+1,,,,
+1,$5m excess $10m,AXA XL,Yes,Yes
+1,$5m excess $10m,AIG,No,No
+1,$5m excess $10m,Chubb,Yes,Yes
+1,$5m excess $10m,AXA XL,Yes,No
+1,$5m excess $10m,AIG,No,No
+1,$5m excess $10m,Chubb,Yes,No
+1,$5m excess $10m,AXA XL,No,No

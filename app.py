@@ -20,7 +20,7 @@ import numpy as np
 import seaborn as sns
 
 # Streamlit page configuration
-st.set_page_config(page_title="Quote Responses", page_icon="💹", layout="wide")
+st.set_page_config(page_title="Placement Outcome", page_icon="💹", layout="wide")
 st.html("styles.html")
 
 # Page title
@@ -106,18 +106,17 @@ st.markdown("""
 st.markdown('<p class="custom-text">Review the status of your quote requests and access the quotes that have been received. Received quotes can also be compared.</p>', unsafe_allow_html=True)
 st.markdown('<p class="custom-text4">All displayed values are in USD ($)</p>', unsafe_allow_html=True)
 
-# Sample data
+# Placement data
 data = {
     'Market': ['Ironshore', 'AIG', 'Tokio', 'Zurich', 'Swiss RE'],
     'Quote Name': ['Quote.pdf']*5,
-    'Status': ["Quoted", "Quoted", "Quoted", "Quoted", "Quoted"],
     'Attachment Point': [10, 10, 20, 30, 60],
     'Limit': [10, 10, 10, 30, 30],
     '100% Layer Premium': [1, 2, 4, 5, 3],
     'Quoted Capacity': [10, 8, 8, 20, 25],
     'Signed Capacity': [5, 5, 8, 20, 25],
-    'Participation Premium': [1,1,4,5,3], 
-    'Bound': [True, True, True, True, False]
+    'Signed Premium': [1,1,4,5,3],
+    'Status': ["Quoted", "Quoted", "Quoted", "Quoted", "Quoted"]
 }
 
 # Create DataFrame
@@ -127,13 +126,18 @@ df = pd.DataFrame(data)
 def calculate_kpis(df):
     total_premium = df['100% Layer Premium'].sum()
     total_capacity_value = df['Quoted Capacity'].sum()
-    total_signed_premium = df['Participation Premium'].sum()
+    total_signed_premium = df['Signed Premium'].sum()
     total_signed_capacity = df['Signed Capacity'].sum()
     return total_premium, total_capacity_value, total_signed_premium, total_signed_capacity
 
 # Editable table configuration
 gb = GridOptionsBuilder.from_dataframe(df)
 gb.configure_default_column(editable=True)
+
+# Configure the "Status" column as a dropdown
+gb.configure_column("Status", cellEditor='agSelectCellEditor', cellEditorParams={'values': ['Quoted', 'Bound']})
+
+
 grid_options = gb.build()
 
 # Display editable table
@@ -166,25 +170,25 @@ with col4:
 
 # Create new columns for plotting
 updated_df['Attachment Point Label'] = updated_df['Limit'].astype(str) + " xs " + updated_df['Attachment Point'].astype(str)
-updated_df['Capacity Percentage'] = (updated_df['Quoted Capacity'] / updated_df['Limit']) * 100
+updated_df['Capacity Percentage'] = (updated_df['Signed Capacity'] / updated_df['Limit']) * 100
 
 # Group data for plotting
 grouped_df = updated_df.groupby('Attachment Point Label')['Capacity Percentage'].sum().reset_index()
-grouped_df2 = updated_df.groupby('Attachment Point Label')['Participation Premium'].sum().reset_index()
+grouped_df2 = updated_df.groupby('Attachment Point Label')['Signed Premium'].sum().reset_index()
 
-max_premium = grouped_df2['Participation Premium'].max()
-min_premium = grouped_df2['Participation Premium'].min()
+max_premium = grouped_df2['Signed Premium'].max()
+min_premium = grouped_df2['Signed Premium'].min()
 
 # Plotting Quoted Capacity
 col1, col2 = st.columns(2)
 with col1:
-    st.markdown('<p class="custom-text2">Quoted Capacity</p>', unsafe_allow_html=True)
+    st.markdown('<p class="custom-text2">Signed Capacity</p>', unsafe_allow_html=True)
     fig = go.Figure()
     fig.add_trace(go.Bar(
         y=grouped_df['Attachment Point Label'],
         x=grouped_df['Capacity Percentage'],
         orientation='h',
-        marker=dict(color=['red' if x <= 100 else 'green' if x == 100 else 'orange' for x in grouped_df['Capacity Percentage']]),
+        marker=dict(color=['red' if x < 100 else 'green' if x == 100 else 'orange' for x in grouped_df['Capacity Percentage']]),
         showlegend=False
     ))
     fig.add_shape(
@@ -239,9 +243,9 @@ with col2:
     fig = go.Figure()
     fig.add_trace(go.Bar(
         y=grouped_df['Attachment Point Label'],
-        x=grouped_df2['Participation Premium'],
+        x=grouped_df2['Signed Premium'],
         orientation='h',
-        marker=dict(color=['red' if x == max_premium else 'green' if x == min_premium else 'orange' for x in grouped_df2['Participation Premium']]),
+        marker=dict(color=['red' if x == max_premium else 'green' if x == min_premium else 'orange' for x in grouped_df2['Signed Premium']]),
         showlegend=False
     ))
     fig.update_layout(
@@ -289,7 +293,7 @@ st.divider()
 ############################################################
 
 # Summary data 
-Total_placement_premium = updated_df['Participation Premium'].sum()
+Total_placement_premium = updated_df['Signed Premium'].sum()
 Theoretical_capacity = updated_df['Quoted Capacity'].sum()
 Total_signed_capacity = updated_df['Signed Capacity'].sum()
 Number_of_layers = updated_df['Attachment Point Label'].nunique()
@@ -397,15 +401,15 @@ update_text_of_textbox(presentation, 5, 25, str(Quote_to_bind_ratio))
 
 plt.rcParams['figure.dpi'] = 600
 
-# Data
+# Data for carrier responses
 data = {
     'Layer': ['Primary $10m', 'Primary $10m', 'Primary $10m', 'Primary $10m', '', 
-              '\$5m excess \$10m', '\$5m excess \$10m', '\$5m excess \$10m', '\$5m excess \$10m', 
-              '\$5m excess \$10m', '\$5m excess \$10m', '\$5m excess \$10m'],
-    'Carriers Submitted to': ['AXA XL', 'AIG', 'Chubb', 'Beazley', '', 
-                              'AXA XL', 'AIG', 'Chubb', 'AXA XL', 'AIG', 'Chubb', 'AXA XL'],
-    'Quoted': ['Yes', 'No', 'Yes', 'No', '', 'Yes', 'No', 'Yes', 'Yes', 'No', 'Yes', 'No'],
-    'Bound': ['Yes', 'No', 'No', 'No', '', 'Yes', 'No', 'Yes', 'No', 'No', 'No', 'No']
+              '\$5m excess \$10m', '\$5m excess \$10m', '\$5m excess \$10m', '\$5m excess \$10m', '',
+              '\$10m excess \$15m', '\$10m excess \$15m', '\$10m excess \$15m'],
+    'Carriers Submitted to': ['AXA XL', 'AIG', 'Chubb', 'Beazley', '',
+                              'AXA XL', 'Beazley', 'Zurich', 'Brit Insurance', '', 'AIG', 'MS Amlin', 'Apollo'],
+    'Quoted': ['Yes', 'Yes', 'No', 'Yes', '', 'No', 'Yes', 'Yes', 'Yes', '', 'No', 'Yes', 'No'],
+    'Bound': ['Yes', 'Yes', 'No', 'Yes', '', 'No', 'Yes', 'Yes', 'Yes','', 'No', 'Yes', 'Yes']
 }
 
 # Create DataFrame

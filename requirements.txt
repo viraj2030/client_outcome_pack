@@ -1,5 +1,5 @@
 matplotlib==3.7.0
-numpy>=1.24.0  # Use a version of numpy that does not depend on distutils
+numpy>=1.23.5  # Use a version of numpy that does not depend on distutils
 pandas==2.0.3
 plotly==5.24.1
 python-pptx==1.0.2
